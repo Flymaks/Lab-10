@@ -1,5 +1,5 @@
 import json, time
-
+import requests
 import pyttsx3, pyaudio, vosk
 
 
@@ -54,15 +54,65 @@ def speak(text):
     speech.text2voice(speaker=1, text=text)
 
 
-rec = Recognize()
-text_gen = rec.listen()
-rec.stream.stop_stream()
-speak('Starting')
-time.sleep(0.5)
-rec.stream.start_stream()
-for text in text_gen:
-    if text == 'закрыть':
-        speak('Бывай, ихтиандр')
-        quit()
-    else:
-        print(text)
+def get_random_user():
+    response = requests.get("https://randomuser.me/api/")
+    data = response.json()
+    user = data["results"][0]
+    return {
+        "name": f"{user['name']['first']} {user['name']['last']}",
+        "country": user['location']['country'],
+        "picture": user['picture']['large']
+    }
+
+def save_image(current_user):
+    filename=f"{current_user['name']}_photo.jpg"
+    response = requests.get(current_user['picture'])
+    with open(filename, "wb") as f:
+        f.write(response.content)
+
+def main():
+    current_user = 0
+    rec = Recognize()
+    text_gen = rec.listen()
+    rec.stream.stop_stream()
+    speak('Starting')
+    time.sleep(0.5)
+    rec.stream.start_stream()
+    for text in text_gen:
+        if text == "закрыть":
+            speak('Bye bye')
+            break
+        elif text == "создать":
+            current_user = get_random_user()
+            speak("User was created")
+        elif text == "имя":
+            if current_user:
+                speak(f"name is: {current_user['name']}")
+            else:
+                speak("First you need create a user")
+        elif text == "страна":
+                if current_user:
+                    speak(f"Country is: {current_user['country']}")
+                else:
+                    speak("First you need create a user")
+            
+        elif text == "анкета":
+            if current_user:
+                speak("form:")
+                speak(f"name: {current_user['name']}")
+                speak(f"country: {current_user['country']}")
+            else:
+                speak("First you need create a user")
+            
+        elif text == "сохранить":
+            if current_user:
+                save_image(current_user)
+                speak(f"image was saved as {current_user['name']}_photo.jpg")
+            else:
+                speak("First you need create a user")
+        else:
+            print(text)
+            speak("command not recognized")
+
+if __name__ == "__main__":
+    main()
