@@ -79,7 +79,7 @@ def main():
     time.sleep(0.5)
     rec.stream.start_stream()
     for text in text_gen:
-        if text == "закрыть":
+        if text == 'закрыть':
             speak('Bye bye')
             break
         elif text == "создать":
